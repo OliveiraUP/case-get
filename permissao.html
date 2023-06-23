@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="./css/style.css">
+
+  <title>Escola</title>
+</head>
+
+<body>
+  <header class="expandir">
+    <nav class="menu-lateral expandir">
+      <div class="btn-expandir" id="btn-exp">
+        <i class="bi bi-list"></i>
+      </div>
+      <ul>
+        <div class="menu-item">
+          <i class="bi bi-person-circle"></i>
+          <span>Administração</span>
+        </div>
+        <li class="item-menu">
+          <a href="./index.html">
+            <i class="bi bi-houses"></i>
+            <span class="txt-link">Escola</span>
+          </a>
+        </li>
+        <li class="item-menu">
+          <a href="./permissao.html">
+            <i class="bi bi-check-square"></i>
+            <span class="txt-link">Permissão</span>
+          </a>
+        </li>
+        <li class="item-menu">
+          <a href="./usuario.html">
+            <i class="bi bi-person-lines-fill"></i>
+            <span class="txt-link">Usuário</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="formulario" id="formulario">
+      <div class="formulario-content">
+        <form class="formulario-form form">
+          <div class="form-header">
+            <h1>Cadastro de Permissão</h1>
+          </div>
+          <div class="form-item">
+            <label for="data-inicio">Data de Início<span>*</span></label>
+            <input type="date" id="data-inicio" name="data-inicio" class="formulario-field" required>
+          </div>
+          <div class="form-item">
+            <label for="ano">Ano<span>*</span></label>
+            <input type="number" id="ano" name="ano" class="formulario-field" min="1900" max="2100">
+          </div>
+          <div class="form-item">
+            <label for="serie">Série<span>*</span></label>
+            <select id="serie" name="serie" class="formulario-field">
+              <option value="">Escolha uma série...</option>
+              <option value="1ª Ano">1ª Ano</option>
+              <option value="2ª Ano">2ª Ano</option>
+              <option value="3ª Ano">3ª Ano</option>
+              <option value="Pré-Vestibular">Pré-Vestibular</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label for="duracao-permissao">Duração da Permissão<span>*</span></label>
+            <select id="duracao-permissao" name="duracao-permissao" class="formulario-field">
+              <option value="">Escolha uma duração de permissão...</option>
+              <option value="01 Mês">01 Mês</option>
+              <option value="03 Meses">03 Meses</option>
+              <option value="06 Meses">06 Meses</option>
+              <option value="09 Meses">09 Meses</option>
+              <option value="12 Meses">12 Meses</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label for="escola">Escola<span>*</span></label>
+            <select id="escola" name="escola" class="formulario-field">
+              <option value="">Escolha uma escola...</option>
+              <option value="aprovazz">Aprovazz</option>
+              <option value="bdm">Colégio BDM</option>
+              <option value="marista">Marista</option>
+              <option value="ideal">Ideal</option>
+            </select>
+          </div>
+        </form>
+        <footer class="formulario-footer">
+          <button class="button green">Salvar</button>
+          <button class="button blue">Cancelar</button>
+        </footer>
+      </div>
+    </section>
+    <section class="table">
+      <table class="records">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Celular</th>
+            <th>Cidade</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Maria</td>
+            <td>maria@gmail.com</td>
+            <td>(11) 97165-1111</td>
+            <td>Anapolis</td>
+            <td>
+              <button type="button" class="button green">editar</button>
+              <button type="button" class="button red">excluir</button>
+            </td>
+          </tr>
+          <tr>
+            <td>João Pedro</td>
+            <td>joao@gmail.com</td>
+            <td>(11) 97165-2222</td>
+            <td>Jandira</td>
+            <td>
+              <button type="button" class="button green">editar</button>
+              <button type="button" class="button red">excluir</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Jose da Silva</td>
+            <td>jose@gmail.com</td>
+            <td>(11) 97165-3333</td>
+            <td>São Roque</td>
+            <td>
+              <button type="button" class="button green">editar</button>
+              <button type="button" class="button red">excluir</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+
+  <script src="./js/permissao.js"></script>
+</body>
+
+</html>

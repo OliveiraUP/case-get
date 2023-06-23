@@ -1,0 +1,41 @@
+@import "./nav.css";
+@import "./escola.css";
+@import "./formulario.css";
+@import "./records.css";
+@import "./button.css";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+body {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  background-color: #f7f7f7;
+}
+
+main {
+  margin: 0 auto;
+  width: 70%;
+}
+
+
+.header {
+  background-color: #efeffa;
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  border-bottom: 1px solid #ddd;
+}
+
+.header h1 {
+  font-family: Arial;
+  color: #222;
+  font-weight: 400;
+}
