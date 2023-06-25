@@ -19,38 +19,116 @@ if (window.innerWidth < 900) {
 
 //CREATE
 
-const getLocalStorage = () =>
-  JSON.parse(localStorage.getItem("dbEscola")) ?? [];
+const getApiData = async () => {
+  const response = await fetch(
+    "http://18.233.181.140:8000/hmlg/gestao/escola/p?page=0"
+  );
+  const data = await response.json();
+  return data.content;
+};
 
-const setLocalStorage = (dbEscola) =>
-  localStorage.setItem("dbEscola", JSON.stringify(dbEscola));
+const getdadosEscola = async () => {
+  const apiData = await getApiData();
+  return apiData ?? [];
+};
 
-const createEscola = (escola) => {
-  const dbEscola = getLocalStorage();
-  dbEscola.push(escola);
-  setLocalStorage(dbEscola);
+
+const setdadosEscola = async (dbEscola) => {
+  const jsonData = JSON.stringify(dbEscola);
+
+  const url = "http://18.233.181.140:8000/hmlg/gestao/escola";
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: jsonData,
+    });
+
+    if (response.ok) {
+      console.log("Dados enviados com sucesso!");
+      updateTable();
+    } else {
+      console.error("Erro ao enviar os dados:", response.statusText);
+    }
+  } catch (error) {
+    console.error("Erro na requisição:", error);
+  }
+};
+
+const createEscola = async (escola) => {
+  const novaEscola = {
+    nome: escola.nome,
+    cidade: escola.cidade,
+    uf: escola.estado,
+  };
+
+  const url = "http://18.233.181.140:8000/hmlg/gestao/escola";
+
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    body: JSON.stringify(novaEscola),
+  })
+    .then((r) => r.json())
+    .then((r) => {
+      console.log(r);
+      updateTable();
+    });
 };
 
 //READ
 
-const readEscola = () => getLocalStorage();
+const readEscola = () => getdadosEscola();
 
 //UPDATE
 
-const updateEscola = (index, escola) => {
-  const dbEscola = readEscola();
-  dbEscola[index] = escola;
-  setLocalStorage(dbEscola);
-};
+async function updateEscola(index, escola) {
+  const dbEscola = await getdadosEscola();
+  const url = "http://18.233.181.140:8000/hmlg/gestao/escola";
+  const bodyData = {
+    id: dbEscola[index].id,
+    nome: escola.nome,
+    cidade: escola.cidade,
+    uf: escola.estado,
+  };
+  console.log(bodyData);
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    body: JSON.stringify(bodyData),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Dados atualizados com sucesso!");
+      console.log(data);
+      updateTable();
+    })
+    .catch((error) => {
+      console.error("Erro ao atualizar os dados:", error);
+    });
+}
 
 //DELETE
 
-const deleteEscola = (index) => {
-  const dbEscola = readEscola();
-  dbEscola.splice(index, 1);
-  setLocalStorage(dbEscola);
+const deleteEscola = (id) => {
+  fetch(`http://18.233.181.140:8000/hmlg/gestao/escola?id=${id}`, {
+    method: "DELETE",
+  })
+    .then(() => {
+      console.log("Escola excluída com sucesso!");
+      updateTable(); 
+    })
+    .catch((error) => {
+      console.error("Erro ao excluir a escola:", error);
+    });
 };
-
 //INTERAÇÃO COM O LAYOUT
 const clearFields = () => {
   const fields = document.querySelectorAll(".formulario-field");
@@ -72,7 +150,7 @@ const saveEscola = () => {
       estado: document.getElementById("estado").value,
     };
     const index = document.getElementById("nome").dataset.index;
-    if (index == "new") {
+    if (index === "new") {
       createEscola(escola);
       updateTable();
       clearFields();
@@ -96,7 +174,7 @@ const createRow = (escola, index) => {
   newRow.innerHTML = `<td data-label="#:">${index + 1}</td>
     <td data-label="Nome:">${escola.nome}</td>
     <td data-label="Cidade:">${escola.cidade}</td>
-    <td data-label="Estado:">${escola.estado}</td>
+    <td data-label="Estado:">${escola.uf}</td>
     <td data-label="Ação:">
     <button type="button" class="button green" id="edit-${index}">Editar</button>
     <button type="button" class="button red" id="delete-${index}">Excluir</button>
@@ -110,56 +188,42 @@ const clearTable = () => {
 };
 
 const updateTable = async () => {
-  try {
-    const response = await fetch(
-      "http://18.233.181.140:8000/hmlg/gestao/escola/todos"
-    );
-    if (!response.ok) {
-      throw new Error("Erro ao obter os dados das escolas.");
-    }
-    const data = await response.json();
-    clearTable();
-    data.forEach((item, index) => {
-      const escola = {
-        nome: item.nome,
-        cidade: item.cidade,
-        estado: item.uf,
-      };
-      createRow(escola, index);
-    });
-  } catch (error) {
-    console.error(error);
-  }
+  const dbEscola = await readEscola();
+  clearTable();
+  dbEscola.forEach(createRow);
 };
 
 const fillFields = (escola) => {
   document.getElementById("nome").value = escola.nome;
   document.getElementById("cidade").value = escola.cidade;
-  document.getElementById("estado").value = escola.estado;
-  document.getElementById("nome").dataset.index = escola.index;
+  document.getElementById("estado").value = escola.uf;
+  document.getElementById("nome").dataset.index = escola.index.toString();
+  console.log(document.getElementById("nome").dataset.index);
+  console.log(escola.id);
 };
 
-const editEscola = (index) => {
+const editEscola = async (index) => {
   const h1 = document.querySelector(".header h1");
   h1.innerHTML = "Alterando Escola #" + (Number(index) + 1);
-  const escola = readEscola()[index];
+  const escola = (await readEscola())[index];
   escola.index = index;
   fillFields(escola);
 };
 
-const editDelete = (event) => {
+const editDelete = async (event) => {
   if (event.target.type == "button") {
     const [action, index] = event.target.id.split("-");
-
-    if (action == "edit") {
+    console.log([action, index]);
+    if (action === "edit") {
       editEscola(index);
     } else {
-      const escola = readEscola()[index];
+      const dbEscola = await readEscola();
+      const escola = dbEscola[index];
       const response = confirm(
-        `Deseja Realmente excluir a escola ${escola.nome}?`
+        `Deseja realmente excluir a escola ${escola.nome}?`
       );
       if (response) {
-        deleteEscola(index);
+        deleteEscola(escola.id);
         updateTable();
       }
     }
@@ -175,7 +239,3 @@ document.getElementById("cancelar").addEventListener("click", cancelaEscola);
 document
   .querySelector("#tableEscola>tbody")
   .addEventListener("click", editDelete);
-
-window.addEventListener("load", function () {
-  updateTable();
-});
