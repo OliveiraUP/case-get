@@ -18,39 +18,148 @@ if (window.innerWidth < 900) {
 //CRUD
 
 //CREATE
+let pag = 0;
 
-const getLocalStorage = () =>
-  JSON.parse(localStorage.getItem("dbEscola")) ?? [];
+const getApiData = async (url) => {
+  const response = await fetch(url);
+  const data = await response.json();
+  return data.content;
+};
 
-const setLocalStorage = (dbEscola) =>
-  localStorage.setItem("dbEscola", JSON.stringify(dbEscola));
+const getApiPag = async (url) => {
+  const response = await fetch(url);
+  const data = await response.json();
+  return data.totalElements;
+};
 
-const createEscola = (escola) => {
-  const dbEscola = getLocalStorage();
-  dbEscola.push(escola);
-  setLocalStorage(dbEscola);
+async function pesquisarUsuario() {
+  const pesquisa = document.getElementById("valor-pesquisa").value;
+  const url = pesquisa
+    ? `http://18.233.181.140:8000/hmlg/gestao/usuario/buscar?nome=${pesquisa}&page=${pag}`
+    : getPageUrl();
+
+  try {
+    const apiData = await getApiData(url);
+    clearTable();
+    apiData.forEach((usuario, index) => {
+      createRow(usuario, index);
+    });
+
+    const totalElements = pesquisa
+      ? apiData.length
+      : await getApiPag(getPageUrl());
+    await getRangeText(totalElements);
+  } catch (error) {
+    console.error("Erro ao obter os dados:", error);
+  }
+}
+
+const getdadosUsuario = async () => {
+  const url = getPageUrl();
+  const apiData = await getApiData(url);
+  return apiData ?? [];
+};
+
+function getPageUrl() {
+  return `http://18.233.181.140:8000/hmlg/gestao/usuario/p?page=${pag}`;
+}
+
+const setdadosUsuario = async (dbUsuario) => {
+  const jsonData = JSON.stringify(dbUsuario);
+
+  const url = "http://18.233.181.140:8000/hmlg/gestao/usuario";
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: jsonData,
+    });
+
+    if (response.ok) {
+      console.log("Dados enviados com sucesso!");
+      updateTable();
+    } else {
+      console.error("Erro ao enviar os dados:", response.statusText);
+    }
+  } catch (error) {
+    console.error("Erro na requisição:", error);
+  }
+};
+
+const createUsuario = async (usuario) => {
+  const novaUsuario = {
+    nome: usuario.nome,
+    email: usuario.email,
+    perfil: usuario.perfil,
+  };
+
+  const url = "http://18.233.181.140:8000/hmlg/gestao/usuario";
+
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    body: JSON.stringify(novaUsuario),
+  })
+    .then((r) => r.json())
+    .then((r) => {
+      console.log(r);
+      updateTable();
+    });
 };
 
 //READ
 
-const readEscola = () => getLocalStorage();
+const readUsuario = () => getdadosUsuario();
 
 //UPDATE
 
-const updateEscola = (index, escola) => {
-  const dbEscola = readEscola();
-  dbEscola[index] = escola;
-  setLocalStorage(dbEscola);
-};
+async function updateUsuario(index, usuario) {
+  const dbUsuario = await getdadosUsuario();
+  const url = "http://18.233.181.140:8000/hmlg/gestao/usuario";
+  const bodyData = {
+    id: dbUsuario[index].id,
+    nome: usuario.nome,
+    email: usuario.email,
+    perfil: usuario.perfil,
+  };
+  console.log(bodyData);
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    body: JSON.stringify(bodyData),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Dados atualizados com sucesso!");
+      console.log(data);
+      updateTable();
+    })
+    .catch((error) => {
+      console.error("Erro ao atualizar os dados:", error);
+    });
+}
 
 //DELETE
 
-const deleteEscola = (index) => {
-  const dbEscola = readEscola();
-  dbEscola.splice(index, 1);
-  setLocalStorage(dbEscola);
+const deleteUsuario = (id) => {
+  fetch(`http://18.233.181.140:8000/hmlg/gestao/usuario?id=${id}`, {
+    method: "DELETE",
+  })
+    .then(() => {
+      console.log("Usuario excluída com sucesso!");
+      updateTable();
+    })
+    .catch((error) => {
+      console.error("Erro ao excluir a usuario:", error);
+    });
 };
-
 //INTERAÇÃO COM O LAYOUT
 const clearFields = () => {
   const fields = document.querySelectorAll(".formulario-field");
@@ -62,96 +171,192 @@ const isValidFields = () => {
   return document.getElementById("form").reportValidity();
 };
 
-const saveEscola = () => {
-  const h1 = document.querySelector(".form-header h1");
-  h1.innerHTML = "Cadastro de Escola";
+const saveUsuario = () => {
+  const h1 = document.querySelector(".header h1");
+  h1.innerHTML = "Cadastro de Usuario";
   if (isValidFields()) {
-    const escola = {
+    const usuario = {
       nome: document.getElementById("nome").value,
-      cidade: document.getElementById("cidade").value,
-      estado: document.getElementById("estado").value,
+      email: document.getElementById("email").value,
+      perfil: document.getElementById("perfil").value,
     };
     const index = document.getElementById("nome").dataset.index;
-    if (index == "new") {
-      createEscola(escola);
+    if (index === "new") {
+      createUsuario(usuario);
       updateTable();
       clearFields();
       document.getElementById("nome").dataset.index = "new";
     } else {
-      updateEscola(index, escola);
+      updateUsuario(index, usuario);
       updateTable();
       clearFields();
     }
   }
 };
 
-const cancelaEscola = () => {
+const cancelaUsuario = () => {
+  const h1 = document.querySelector(".header h1");
+  h1.innerHTML = "Cadastro de Usuario";
   clearFields();
 };
 
-const createRow = (escola, index) => {
+const createRow = (usuario, index) => {
   const newRow = document.createElement("tr");
-  newRow.innerHTML = `<td>${escola.nome}</td>
-  <td>${escola.cidade}</td>
-  <td>${escola.estado}</td>
-  <td>
+  newRow.innerHTML = `<td data-label="#:">${index + 1}</td>
+    <td data-label="Nome:">${usuario.nome}</td>
+    <td data-label="Email:">${usuario.email}</td>
+    <td data-label="Perfil:">${usuario.perfil}</td>
+    <td data-label="Ação:">
     <button type="button" class="button green" id="edit-${index}">Editar</button>
     <button type="button" class="button red" id="delete-${index}">Excluir</button>
   </td>`;
-  document.querySelector("#tableEscola>tbody").appendChild(newRow);
+  document.querySelector("#tableUsuario>tbody").appendChild(newRow);
 };
 
 const clearTable = () => {
-  const rows = document.querySelectorAll("#tableEscola>tbody tr");
+  const rows = document.querySelectorAll("#tableUsuario>tbody tr");
   rows.forEach((row) => row.parentNode.removeChild(row));
 };
 
 const updateTable = () => {
-  const dbEscola = readEscola();
   clearTable();
-  dbEscola.forEach(createRow);
+  getdadosUsuario().then((apiData) => {
+    apiData.forEach((usuario, index) => {
+      createRow(usuario, index);
+    });
+  });
+  getRangeText(); // Atualizar o texto de paginação
 };
 
-const fillFields = (escola) => {
-  document.getElementById("nome").value = escola.nome;
-  document.getElementById("cidade").value = escola.cidade;
-  document.getElementById("estado").value = escola.estado;
-  document.getElementById("nome").dataset.index = escola.index;
+const fillFields = (usuario) => {
+  document.getElementById("nome").value = usuario.nome;
+  document.getElementById("email").value = usuario.email;
+  document.getElementById("perfil").value = usuario.perfil;
+  document.getElementById("nome").dataset.index = usuario.index.toString();
+  console.log(document.getElementById("nome").dataset.index);
+  console.log(usuario.id);
 };
 
-const editEscola = (index) => {
-  const h1 = document.querySelector(".form-header h1");
-  h1.innerHTML = "Alterando Escola #" + (Number(index) + 1);
-  const escola = readEscola()[index];
-  escola.index = index;
-  fillFields(escola);
+const editUsuario = async (index) => {
+  const h1 = document.querySelector(".header h1");
+  h1.innerHTML = "Alterando Usuario #" + (Number(index) + 1);
+  const usuario = (await readUsuario())[index];
+  usuario.index = index;
+  fillFields(usuario);
 };
 
-const editDelete = (event) => {
+const editDelete = async (event) => {
   if (event.target.type == "button") {
     const [action, index] = event.target.id.split("-");
-
-    if (action == "edit") {
-      editEscola(index);
+    console.log([action, index]);
+    if (action === "edit") {
+      editUsuario(index);
     } else {
-      const escola = readEscola()[index];
+      const dbUsuario = await readUsuario();
+      const usuario = dbUsuario[index];
       const response = confirm(
-        `Deseja Realmente excluir a escola ${escola.nome}?`
+        `Deseja realmente excluir a usuario ${usuario.nome}?`
       );
       if (response) {
-        deleteEscola(index);
+        deleteUsuario(usuario.id);
         updateTable();
       }
     }
   }
 };
 
+async function getRangeText() {
+  const paginas = document.querySelector(".localizacao-pag");
+  const pesquisa = document.getElementById("valor-pesquisa").value;
+  const url = pesquisa
+    ? `http://18.233.181.140:8000/hmlg/gestao/usuario/buscar?nome=${pesquisa}&page=0`
+    : `http://18.233.181.140:8000/hmlg/gestao/usuario/p?page=0`;
+  const totalElements = await getApiPag(url);
+
+  if (pesquisa) {
+    const start = pag * 10 + 1;
+    const end = Math.min((pag + 1) * 10, totalElements);
+    paginas.innerHTML = `Mostrando ${start} até ${end} de ${totalElements}`;
+  } else {
+    const start = pag * 10 + 1;
+    const end = Math.min((pag + 1) * 10, totalElements);
+    paginas.innerHTML = `Mostrando ${start} até ${end} de ${totalElements}`;
+  }
+}
+
+async function voltaProxPag(event) {
+  const targetClass = event.currentTarget.classList.value;
+  const pesquisa = document.getElementById("valor-pesquisa").value;
+  let totalElements;
+
+  if (pesquisa) {
+    const url = `http://18.233.181.140:8000/hmlg/gestao/usuario/buscar?nome=${pesquisa}&page=${pag}`;
+    totalElements = await getApiPag(url);
+  } else {
+    const url = getPageUrl();
+    totalElements = await getApiPag(url);
+  }
+
+  if (targetClass.includes("volta-pag") && pag > 0) {
+    pag--;
+    const url = pesquisa
+      ? `http://18.233.181.140:8000/hmlg/gestao/usuario/buscar?nome=${pesquisa}&page=${pag}`
+      : getPageUrl();
+    getApiData(url)
+      .then((apiData) => {
+        clearTable();
+        apiData.forEach((usuario, index) => {
+          createRow(usuario, index);
+        });
+      })
+      .catch((error) => {
+        console.error("Erro ao obter os dados:", error);
+      });
+    getRangeText(totalElements);
+  } else if (
+    targetClass.includes("proxima-pag") &&
+    pag < Math.ceil(totalElements / 10) - 1
+  ) {
+    pag++;
+    const url = pesquisa
+      ? `http://18.233.181.140:8000/hmlg/gestao/usuario/buscar?nome=${pesquisa}&page=${pag}`
+      : getPageUrl();
+    getApiData(url)
+      .then((apiData) => {
+        clearTable();
+        apiData.forEach((usuario, index) => {
+          createRow(usuario, index);
+        });
+      })
+      .catch((error) => {
+        console.error("Erro ao obter os dados:", error);
+      });
+    getRangeText(totalElements);
+  }
+}
+
 updateTable();
 
 //EVENTOS
-document.getElementById("salvar").addEventListener("click", saveEscola);
-document.getElementById("cancelar").addEventListener("click", cancelaEscola);
+document.getElementById("salvar").addEventListener("click", saveUsuario);
+document.getElementById("cancelar").addEventListener("click", cancelaUsuario);
 
 document
-  .querySelector("#tableEscola>tbody")
+  .getElementById("btn-pesquisar")
+  .addEventListener("click", pesquisarUsuario);
+
+document
+  .getElementById("valor-pesquisa")
+  .addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      pesquisarUsuario();
+    }
+  });
+
+document.querySelector(".volta-pag").addEventListener("click", voltaProxPag);
+
+document.querySelector(".proxima-pag").addEventListener("click", voltaProxPag);
+
+document
+  .querySelector("#tableUsuario>tbody")
   .addEventListener("click", editDelete);
