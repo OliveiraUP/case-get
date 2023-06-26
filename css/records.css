@@ -3,17 +3,53 @@
   user-select: none;
   text-align: left;
   background-color: #fff;
-  padding: 10px;
-  border: 1px solid #d5d5d5;
+  padding: 0px 10px;
   border-radius: 0 0 6px 6px;
 }
 
-.table .header {
-  margin-top: 30px;
-  margin-bottom: 0px;
-  border-radius: 6px 6px 0 0;
+.table {
+  background-color: #fff;
   border: 1px solid #d5d5d5;
-  border-bottom: none;
+  margin-top: 30px;
+  border-radius: 6px;
+}
+
+.table .header {
+  margin-bottom: 0px;
+  border: 1px solid #d5d5d5;
+}
+
+.search {
+  padding: 10px;
+  display: flex;
+  justify-content: end;
+}
+
+.pesquisar {
+  border: 2px solid #ddd;
+  border-radius: 6px;
+}
+
+.pesquisar-form {
+  padding: 10px;
+  border: none;
+  font-size: 15px;
+  width: 80%;
+}
+
+.pesquisar-form:focus,
+.pesquisa-linha:focus {
+  outline: none;
+}
+
+.pesquisa-linha {
+  padding: 6px;
+  background-color: #fff;
+  border: none;
+}
+.pesquisa-linha i {
+  font-size: 16px;
+  margin-right: 6px;
 }
 
 .records thead tr th {
@@ -71,6 +107,42 @@
 .records td:last-child button {
   margin-right: 10px;
   margin: 4px;
+}
+
+.paginacao {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  margin-right: 6px;
+}
+
+.paginacao p {
+  margin-right: 10px;
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+}
+
+.volta-pag {
+  margin-right: 4px;
+  border: 1px solid #bbb;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.volta-pag i {
+  font-size: 17px;
+}
+
+.proxima-pag {
+  border: 1px solid #bbb;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.proxima-pag i {
+  font-size: 17px;
 }
 
 @media (max-width: 750px) {

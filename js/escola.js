@@ -18,20 +18,51 @@ if (window.innerWidth < 900) {
 //CRUD
 
 //CREATE
+let pag = 0;
 
-const getApiData = async () => {
-  const response = await fetch(
-    "http://18.233.181.140:8000/hmlg/gestao/escola/p?page=0"
-  );
+const getApiData = async (url) => {
+  const response = await fetch(url);
   const data = await response.json();
   return data.content;
 };
 
+const getApiPag = async (url) => {
+  const response = await fetch(url);
+  const data = await response.json();
+  return data.totalElements;
+};
+
+async function pesquisarEscola() {
+  const pesquisa = document.getElementById("valor-pesquisa").value;
+  const url = pesquisa
+    ? `http://18.233.181.140:8000/hmlg/gestao/escola/buscar?page=${pag}&valor=${pesquisa}`
+    : getPageUrl();
+
+  try {
+    const apiData = await getApiData(url);
+    clearTable();
+    apiData.forEach((escola, index) => {
+      createRow(escola, index);
+    });
+
+    const totalElements = pesquisa
+      ? apiData.length
+      : await getApiPag(getPageUrl());
+    await getRangeText(totalElements);
+  } catch (error) {
+    console.error("Erro ao obter os dados:", error);
+  }
+}
+
 const getdadosEscola = async () => {
-  const apiData = await getApiData();
+  const url = getPageUrl();
+  const apiData = await getApiData(url);
   return apiData ?? [];
 };
 
+function getPageUrl() {
+  return `http://18.233.181.140:8000/hmlg/gestao/escola/p?page=${pag}`;
+}
 
 const setdadosEscola = async (dbEscola) => {
   const jsonData = JSON.stringify(dbEscola);
@@ -123,7 +154,7 @@ const deleteEscola = (id) => {
   })
     .then(() => {
       console.log("Escola excluída com sucesso!");
-      updateTable(); 
+      updateTable();
     })
     .catch((error) => {
       console.error("Erro ao excluir a escola:", error);
@@ -187,10 +218,14 @@ const clearTable = () => {
   rows.forEach((row) => row.parentNode.removeChild(row));
 };
 
-const updateTable = async () => {
-  const dbEscola = await readEscola();
+const updateTable = () => {
   clearTable();
-  dbEscola.forEach(createRow);
+  getdadosEscola().then((apiData) => {
+    apiData.forEach((escola, index) => {
+      createRow(escola, index);
+    });
+  });
+  getRangeText(); // Atualizar o texto de paginação
 };
 
 const fillFields = (escola) => {
@@ -230,11 +265,97 @@ const editDelete = async (event) => {
   }
 };
 
+async function getRangeText() {
+  const paginas = document.querySelector(".localizacao-pag");
+  const pesquisa = document.getElementById("valor-pesquisa").value;
+  const url = pesquisa
+    ? `http://18.233.181.140:8000/hmlg/gestao/escola/buscar?page=0&valor=${pesquisa}`
+    : `http://18.233.181.140:8000/hmlg/gestao/escola/p?page=0`;
+  const totalElements = await getApiPag(url);
+
+  if (pesquisa) {
+    const start = pag * 10 + 1;
+    const end = Math.min((pag + 1) * 10, totalElements);
+    paginas.innerHTML = `Mostrando ${start} até ${end} de ${totalElements}`;
+  } else {
+    const start = pag * 10 + 1;
+    const end = Math.min((pag + 1) * 10, totalElements);
+    paginas.innerHTML = `Mostrando ${start} até ${end} de ${totalElements}`;
+  }
+}
+
+async function voltaProxPag(event) {
+  const targetClass = event.currentTarget.classList.value;
+  const pesquisa = document.getElementById("valor-pesquisa").value;
+  let totalElements;
+
+  if (pesquisa) {
+    const url = `http://18.233.181.140:8000/hmlg/gestao/escola/buscar?page=${pag}&valor=${pesquisa}`;
+    totalElements = await getApiPag(url);
+  } else {
+    const url = getPageUrl();
+    totalElements = await getApiPag(url);
+  }
+
+  if (targetClass.includes("volta-pag") && pag > 0) {
+    pag--;
+    const url = pesquisa
+      ? `http://18.233.181.140:8000/hmlg/gestao/escola/buscar?page=${pag}&valor=${pesquisa}`
+      : getPageUrl();
+    getApiData(url)
+      .then((apiData) => {
+        clearTable();
+        apiData.forEach((escola, index) => {
+          createRow(escola, index);
+        });
+      })
+      .catch((error) => {
+        console.error("Erro ao obter os dados:", error);
+      });
+    getRangeText(totalElements);
+  } else if (
+    targetClass.includes("proxima-pag") &&
+    pag < Math.ceil(totalElements / 10) - 1
+  ) {
+    pag++;
+    const url = pesquisa
+      ? `http://18.233.181.140:8000/hmlg/gestao/escola/buscar?page=${pag}&valor=${pesquisa}`
+      : getPageUrl();
+    getApiData(url)
+      .then((apiData) => {
+        clearTable();
+        apiData.forEach((escola, index) => {
+          createRow(escola, index);
+        });
+      })
+      .catch((error) => {
+        console.error("Erro ao obter os dados:", error);
+      });
+    getRangeText(totalElements);
+  }
+}
+
 updateTable();
 
 //EVENTOS
 document.getElementById("salvar").addEventListener("click", saveEscola);
 document.getElementById("cancelar").addEventListener("click", cancelaEscola);
+
+document
+  .getElementById("btn-pesquisar")
+  .addEventListener("click", pesquisarEscola);
+
+document
+  .getElementById("valor-pesquisa")
+  .addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      pesquisarEscola();
+    }
+  });
+
+document.querySelector(".volta-pag").addEventListener("click", voltaProxPag);
+
+document.querySelector(".proxima-pag").addEventListener("click", voltaProxPag);
 
 document
   .querySelector("#tableEscola>tbody")
